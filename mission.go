@@ -20,10 +20,11 @@ import (
 )
 
 var (
-    SessionId = "1e33c699-09b6-4422-aa8d-c444095cadd5"
+    SessionId = "a82facf3-8914-4ed4-a203-28b90cbbd737"
     proxyURL  = "http://192.168.0.216:8888"
     count     int
     BoxID     string
+    Wishlist    = make([]float64, 0, 400)
 )
 
 func SHA256withSid(apiEndpoint string, json string) string {
@@ -69,14 +70,23 @@ func missionGet() {
     jsonParsed, _ := gabs.ParseJSONBuffer(res.Body)
     if jsonParsed.S("resultCode").Data().(float64) == 0 {
         log.Println("讀取任務列表...")
-        var idList string
         children, _ := jsonParsed.S("missionLogs").Children()
         for _, child := range children {
             CharDrawn := child.Search("managedMissionId").Data().(float64)
-            idList += strconv.Itoa(int(CharDrawn)) + "\n"
+            if !idContains(CharDrawn) {
+                finish(int(CharDrawn))
+            }
         }
-        ioutil.WriteFile("idlist.txt", []byte(idList), 0644)
     }
+}
+
+func idContains(drawnID float64) bool {
+    for _, value := range Wishlist {
+        if value == drawnID {
+            return true
+        }
+    }
+    return false
 }
 
 func finish(id int) {
@@ -209,18 +219,6 @@ func ReadFile() {
     defer f.Close()
     s := bufio.NewScanner(f)
     for s.Scan() {
-        if count >= 80 {
-            var next string
-            for next == "" {
-                fmt.Println("請輸入帖子ID: ")
-                fmt.Scanln(&next)
-            }
-            if next == "1" {
-                count = 0
-            } else {
-                time.Sleep(60 * time.Second)
-            }
-        }
         /*if s.Text() == "3221484531" || s.Text() == "3221484605" || s.Text() == "3221484650" || s.Text() == "3221484682" || s.Text() == "3221484747" || s.Text() == "3221484789" || s.Text() == "3221484826" || s.Text() == "3221484856" || s.Text() == "3221484905" || s.Text() == "3221484922" || s.Text() == "3221484967" || s.Text() == "3221484988" {
             continue
         }
@@ -237,10 +235,10 @@ func ReadFile() {
 }
 
 func main() {
-    /*for {
+    for {
         missionGet()
-    }*/
+        presentGet()
+        getPresent()
+    }
     //ReadFile()
-    presentGet()
-    getPresent()
 }
